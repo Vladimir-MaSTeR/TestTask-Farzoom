@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/album")
 public class AlbumController {
+    // Слишком универсальный тип возврата данных: из описания контроллеров не ясно что именно он возвращает
 
     @Autowired
+    // почему доступ к полю не приватный?
     AlbumService service;
 
     @PostMapping
@@ -21,6 +23,7 @@ public class AlbumController {
         return service.addAlbum(name);
     }
 
+    // для изменения альбома нужно использовать PUT-метод
     @PostMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CommonResponse renameAlbum(@PathVariable int id, @RequestParam String name) {
@@ -43,6 +46,7 @@ public class AlbumController {
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CommonResponse getImageToAlbum(@PathVariable int id) {
+        // в ответе не хватает данных по альбому
         return service.getImageToAlbum(id);
     }
 

@@ -10,6 +10,7 @@ public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "image_id")
+    // тип ключа - примитивный int, вместо уместного Long
     private int imageId;
 
     @JsonIgnore

@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
+// отсутствие стиля именования таблиц (наименование таблицы во множественном числе, в то время как image - в единственном)
 @Table(name = "albums")
 public class Album {
 
