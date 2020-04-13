@@ -49,6 +49,7 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 			<version>2.2.2.RELEASE</version>
 		</dependency>
+		<!-- зачем нужен thymeleaf? -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -58,6 +59,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<!-- зачем нужно данные исключение? -->
 			<exclusions>
 				<exclusion>
 					<groupId>org.junit.vintage</groupId>

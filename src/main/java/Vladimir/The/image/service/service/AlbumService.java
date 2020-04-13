@@ -24,6 +24,7 @@ public class AlbumService {
         Album searchAlbumName = albumRepository.searchAlbumName(name).stream().findFirst().orElse(null);
 
         if (name.length() == 0 || searchAlbumName != null) {
+            // неверный каст BodyBuilder -> TrueFalseAndObjectResponse
             return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.BAD_REQUEST);
         }
 
@@ -31,10 +32,12 @@ public class AlbumService {
         Album album = new Album(name);
         albumRepository.save(album);
 
+        // зачем нужна проверка на существование, остальной код гарантирует, что такой папки не будет.
         if (!dir.exists()) {
             dir.mkdirs();
         }
 
+        // почему происходит возврат только идентификатора альбома, не всего объекта?
         return new TrueFalseAndObjectResponse(true, new AlbumIdResponse(album.getAlbumId()));
     }
 
@@ -42,12 +45,14 @@ public class AlbumService {
         Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
 
         if (album == null || name.length() == 0) {
+            // неверный каст BodyBuilder -> TrueFalseAndObjectResponse
             return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
         }
 
         File dir = new File(relativePath(album.getAlbumName()));
         File newDir = new File(relativePath(name));
 
+        // зачем нужна проверка на существование, остальной код гарантирует, что папка будет
         if (dir.exists()) {
             dir.renameTo(newDir);
         }
@@ -55,6 +60,7 @@ public class AlbumService {
         album.setAlbumName(name);
         albumRepository.save(album);
 
+        // нужно возвращать новое состояние объекта
         return new TrueFalseAndObjectResponse(true);
     }
 
@@ -62,6 +68,7 @@ public class AlbumService {
         Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
 
         if (album == null) {
+            // неверный каст BodyBuilder -> TrueFalseAndObjectResponse
             return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
         }
 
@@ -78,9 +85,12 @@ public class AlbumService {
         List<AllAlbums> allAlbumsList = new ArrayList<>();
 
         if (albumsList.size() == 0) {
+            // неверная интерпретация ошибки: если альбомов нет, это не значит, что клиент совершил ошибку
+            // неверный каст BodyBuilder -> AllAlbumsResponse
             return (AllAlbumsResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
         }
 
+        // идеальное место для использования Stream::map::collect
         for (Album album : albumsList) {
             allAlbumsList.add(new AllAlbums(album.getAlbumId(), album.getAlbumName()));
         }
@@ -88,10 +98,12 @@ public class AlbumService {
         return new AllAlbumsResponse(allAlbumsList);
     }
 
+    //
     public ImageToAlbumResponse getImageToAlbum(int albumId) {
         Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
 
         if (album == null) {
+            // неверный каст BodyBuilder -> AllAlbumsResponse
             return (ImageToAlbumResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
         }
 
@@ -100,12 +112,14 @@ public class AlbumService {
 
 
     private String relativePath(String name) {
+        // некорректное место хранения файлов альбомов
         return "src/main/resources/albums/" + name;
     }
 
     private void deleteDirectory(File path) {
         if (path.isDirectory()) {
 
+            // когда в path.listFiles() может быть null?
             for (File f : Objects.requireNonNull(path.listFiles())) {
                 if (f.isDirectory()) {
                     deleteDirectory(f);

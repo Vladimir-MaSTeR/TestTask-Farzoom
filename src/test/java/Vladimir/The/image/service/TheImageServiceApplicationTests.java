@@ -8,6 +8,7 @@ class TheImageServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// зачем нужен этот класс
 	}
 
 }
