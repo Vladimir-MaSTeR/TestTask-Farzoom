@@ -11,5 +11,6 @@ import java.util.List;
 public interface ImageRepository extends JpaRepository<Image, Integer> {
 
     @Query(value = "SELECT * FROM image i WHERE i.image_id = ?1", nativeQuery = true)
+    // возможно ли получить по id коллекцию изображений?
     List<Image> searchImageId(int id);
 }

@@ -1,5 +1,7 @@
 package Vladimir.The.image.service.api;
 
+// не совсем корректное название для альбома
+// зачем implements CommonResponse ?
 public class AllAlbums implements CommonResponse {
 
     private int id;

@@ -44,6 +44,7 @@ public class ImageServiceTest {
     public void addImageToAlbumTest() {
         try {
             doReturn(new ImageIdResponse()).when(imageService).addImageToAlbum(album.getAlbumId(), multipartFile);
+            // тест ничего не делает, не проверяет
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -52,6 +53,7 @@ public class ImageServiceTest {
     @Test
     public void deleteImageTest() {
         doReturn(new TrueFalseAndObjectResponse()).when(imageService).deleteImage(album.getAlbumId(), image.getImageId());
+        // тест ничего не делает, не проверяет
     }
 
     @Test
@@ -59,5 +61,6 @@ public class ImageServiceTest {
         doReturn(ResponseEntity.ok().header("Content-Disposition", "attachment; filename=" + image.getImageName())
                 .body(resource))
                 .when(imageService).copyImage(album.getAlbumId(), image.getImageId());
+        // тест ничего не делает, не проверяет
     }
 }

@@ -43,27 +43,32 @@ public class AlbumServiceTest {
     public void addAlbumTest() {
         Mockito.when(albumRepository.save(any(Album.class))).thenReturn(album);
         doReturn(new TrueFalseAndObjectResponse()).when(albumService).addAlbum(album.getAlbumName());
+        // тест ничего не делает, не проверяет
     }
 
     @Test
     public void renameAlbum() {
         Mockito.when(albumRepository.save(any(Album.class))).thenReturn(album);
         doReturn(new TrueFalseAndObjectResponse()).when(albumService).renameAlbum(album.getAlbumId(), "New name");
+        // тест ничего не делает, не проверяет
     }
 
     @Test
     public void deleteAlbum() {
         doReturn(new TrueFalseAndObjectResponse()).when(albumService).deleteAlbum(album.getAlbumId());
+        // тест ничего не делает, не проверяет
     }
 
     @Test
     public void getAllAlbums() {
         doReturn(new AllAlbumsResponse()).when(albumService).getAllAlbums();
+        // тест ничего не делает, не проверяет
     }
 
     @Test
     public void getImageToAlbum() {
         doReturn(new ImageToAlbumResponse()).when(albumService).getImageToAlbum(album.getAlbumId());
+        // тест ничего не делает, не проверяет
     }
 
 }
