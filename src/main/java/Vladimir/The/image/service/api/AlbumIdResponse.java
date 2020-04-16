@@ -1,6 +1,6 @@
 package Vladimir.The.image.service.api;
 
-public class AlbumIdResponse implements CommonResponse {
+public class AlbumIdResponse {
 
     private int albumId;
 

@@ -2,25 +2,25 @@ package Vladimir.The.image.service.api;
 
 import java.util.List;
 
-public class AllAlbumsResponse implements CommonResponse {
+public class AllAlbumsResponse {
 
 
-    private List<AllAlbums> albums;
+    private List<NameAndIdAlbumResponse> albums;
 
 
     public AllAlbumsResponse() {
     }
 
-    public AllAlbumsResponse(List<AllAlbums> albums) {
+    public AllAlbumsResponse(List<NameAndIdAlbumResponse> albums) {
         this.albums = albums;
     }
 
 
 
-    public List<AllAlbums> getAlbums() {
+    public List<NameAndIdAlbumResponse> getAlbums() {
         return albums;
     }
-    public void setAlbums(List<AllAlbums> albums) {
+    public void setAlbums(List<NameAndIdAlbumResponse> albums) {
         this.albums = albums;
     }
 }

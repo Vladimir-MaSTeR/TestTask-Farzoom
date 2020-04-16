@@ -10,7 +10,7 @@ public class Image {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "image_id")
-    private int imageId;
+    private long imageId;
 
     @JsonIgnore
     @ManyToOne
@@ -34,11 +34,11 @@ public class Image {
     }
 
 
-    public int getImageId() {
+    public long getImageId() {
         return imageId;
     }
 
-    public void setImageId(int imageId) {
+    public void setImageId(long imageId) {
         this.imageId = imageId;
     }
 

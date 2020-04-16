@@ -1,11 +1,14 @@
 package Vladimir.The.image.service.service;
 
-import Vladimir.The.image.service.api.ImageIdResponse;
-import Vladimir.The.image.service.api.TrueFalseAndObjectResponse;
+import Vladimir.The.image.service.api.AddImageResponse;
+import Vladimir.The.image.service.api.CopyImageResponse;
+import Vladimir.The.image.service.api.ResultTrueResponse;
 import Vladimir.The.image.service.model.Album;
 import Vladimir.The.image.service.model.Image;
 import Vladimir.The.image.service.repository.AlbumRepository;
 import Vladimir.The.image.service.repository.ImageRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -14,17 +17,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
-import java.util.Random;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @Service
 public class ImageService {
@@ -33,38 +33,41 @@ public class ImageService {
     private ImageRepository imageRepository;
     @Autowired
     private AlbumRepository albumRepository;
+    @Autowired
+    private AlbumService albumService;
+
+    private static Logger logger = LogManager.getLogger(ImageService.class.getName());
 
 
-    public ImageIdResponse addImageToAlbum(int albumId, MultipartFile multipartFile) throws IOException {
-        Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
+    public ResponseEntity<AddImageResponse> addImageToAlbum(int albumId, MultipartFile multipartFile) {
+        Album album = albumRepository.findByAlbumId(albumId);
 
         if (album == null || multipartFile.isEmpty()) {
-            return (ImageIdResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        final int LENGTH_NAME_GENERATE = 20;
-        final String NAME_IMAGE = generateStringImageName(LENGTH_NAME_GENERATE);
-        final String DIRECTORY_PATH = "src/main/resources/albums/" + album.getAlbumName();
+        String imageName = generateStringImageName();
+        String directoryPath = albumService.getUploadPath() + album.getAlbumName();
+        Path path = Paths.get(directoryPath, imageName);
 
-        Path path = Paths.get(DIRECTORY_PATH, NAME_IMAGE);
-        Path file = Files.createFile(path);
-
-        try (BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(file.toString()))) {
-            stream.write(multipartFile.getBytes());
+        try {
+            Files.copy(multipartFile.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            logger.error(e);
         }
 
-        Image image = new Image(album, NAME_IMAGE, DIRECTORY_PATH);
+        Image image = new Image(album, imageName, directoryPath);
         imageRepository.save(image);
 
-        return new ImageIdResponse(image.getImageId());
+        return new ResponseEntity<>(new AddImageResponse(albumId, image), HttpStatus.OK);
     }
 
-    public TrueFalseAndObjectResponse deleteImage(int albumId, int imageId) {
-        Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
-        Image image = imageRepository.searchImageId(imageId).stream().findFirst().orElse(null);
+    public ResponseEntity<ResultTrueResponse> deleteImage(int albumId, long imageId) {
+        Album album = albumRepository.findByAlbumId(albumId);
+        Image image = imageRepository.findByImageId(imageId);
 
         if (album == null || image == null) {
-            return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         File file = new File(image.getPathImage() + "/" + image.getImageName());
@@ -72,57 +75,39 @@ public class ImageService {
 
         imageRepository.delete(image);
 
-        return new TrueFalseAndObjectResponse(true);
+        return new ResponseEntity<>(new ResultTrueResponse(true), HttpStatus.OK);
     }
 
-    public ResponseEntity copyImage(int albumId, int imageId) {
-        Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
-        Image image = imageRepository.searchImageId(imageId).stream().findFirst().orElse(null);
+    public Object copyImage(int albumId, long imageId) {
+        Album album = albumRepository.findByAlbumId(albumId);
+        Image image = imageRepository.findByImageId(imageId);
 
         if (album == null || image == null) {
-            return (ResponseEntity) ResponseEntity.status(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
         Path path = Paths.get(image.getPathImage() + "/" + image.getImageName());
         Resource resource = null;
+
         try {
             resource = new UrlResource(path.toUri());
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            logger.error(e);
         }
 
-        if (!resource.exists() || !resource.isReadable()) {
-            return (ResponseEntity) ResponseEntity.status(HttpStatus.NOT_FOUND);
+        if (resource == null || !resource.exists() || !resource.isReadable()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=" + image.getImageName())
-                .body(resource);
+        return new CopyImageResponse(image.getImageName(), resource);
+
+//
     }
 
 
-    private String generateStringImageName(int numMs) {
-        char[] data = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-                'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-                'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
-
-        char[] index = new char[numMs];
-        Random r = new Random();
-        int i = 0;
-
-        for (i = 0; i < (index.length); i++) {
-            int ran = r.nextInt(data.length);
-            index[i] = data[ran];
-        }
-        return new String(index) + ".jpg";
+    private String generateStringImageName() {
+        return UUID.randomUUID().toString() + ".jpg";
     }
-
-    private void deleteFile(File path) {
-        for (File f : Objects.requireNonNull(path.listFiles())) {
-            if (!f.isDirectory()) {
-                f.delete();
-            }
-        }
-    }
-
 
 }

@@ -1,9 +1,13 @@
 package Vladimir.The.image.service.service;
 
-import Vladimir.The.image.service.api.*;
+import Vladimir.The.image.service.api.AllAlbumsResponse;
+import Vladimir.The.image.service.api.ImageToAlbumResponse;
+import Vladimir.The.image.service.api.NameAndIdAlbumResponse;
+import Vladimir.The.image.service.api.ResultTrueResponse;
 import Vladimir.The.image.service.model.Album;
 import Vladimir.The.image.service.repository.AlbumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -11,102 +15,94 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
+
 
 @Service
 public class AlbumService {
+
+
+    @Value("${upload.path}")
+    private String uploadPath;
 
     @Autowired
     private AlbumRepository albumRepository;
 
 
-    public TrueFalseAndObjectResponse addAlbum(String name) {
-        Album searchAlbumName = albumRepository.searchAlbumName(name).stream().findFirst().orElse(null);
+    public ResponseEntity<Album> addAlbum(String name) {
+        Album searchAlbumName = albumRepository.findByAlbumName(name);
 
         if (name.length() == 0 || searchAlbumName != null) {
-            return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        File dir = new File(relativePath(name));
+        File dir = new File(uploadPath + name);
         Album album = new Album(name);
         albumRepository.save(album);
 
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
+        dir.mkdirs();
 
-        return new TrueFalseAndObjectResponse(true, new AlbumIdResponse(album.getAlbumId()));
+        return new ResponseEntity<>(album, HttpStatus.OK);
     }
 
-    public TrueFalseAndObjectResponse renameAlbum(int albumId, String name) {
-        Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
+    public ResponseEntity<Album> renameAlbum(int albumId, String name) {
+        Album album = albumRepository.findByAlbumId(albumId);
 
         if (album == null || name.length() == 0) {
-            return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        File dir = new File(relativePath(album.getAlbumName()));
-        File newDir = new File(relativePath(name));
+        File dir = new File(uploadPath + album.getAlbumName());
+        File newDir = new File(uploadPath + name);
 
-        if (dir.exists()) {
-            dir.renameTo(newDir);
-        }
+        dir.renameTo(newDir);
 
         album.setAlbumName(name);
         albumRepository.save(album);
 
-        return new TrueFalseAndObjectResponse(true);
+        return new ResponseEntity<>(album, HttpStatus.OK);
     }
 
-    public TrueFalseAndObjectResponse deleteAlbum(int albumId) {
-        Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
+    public ResponseEntity<ResultTrueResponse> deleteAlbum(int albumId) {
+        Album album = albumRepository.findByAlbumId(albumId);
 
         if (album == null) {
-            return (TrueFalseAndObjectResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        File dir = new File(relativePath(album.getAlbumName()));
+        File dir = new File(uploadPath + album.getAlbumName());
         deleteDirectory(dir);
 
         albumRepository.delete(album);
 
-        return new TrueFalseAndObjectResponse(true);
+        return new ResponseEntity<>(new ResultTrueResponse(true), HttpStatus.OK);
     }
 
-    public AllAlbumsResponse getAllAlbums() {
+    public ResponseEntity<AllAlbumsResponse> getAllAlbums() {
         List<Album> albumsList = albumRepository.findAll();
-        List<AllAlbums> allAlbumsList = new ArrayList<>();
 
-        if (albumsList.size() == 0) {
-            return (AllAlbumsResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
-        }
+        List<NameAndIdAlbumResponse> nameAndIdAlbumResponseList = albumsList.stream().
+                map(album -> new NameAndIdAlbumResponse(album.getAlbumId(), album.getAlbumName())).
+                collect(Collectors.toCollection(ArrayList::new));
 
-        for (Album album : albumsList) {
-            allAlbumsList.add(new AllAlbums(album.getAlbumId(), album.getAlbumName()));
-        }
-
-        return new AllAlbumsResponse(allAlbumsList);
+        return new ResponseEntity<>(new AllAlbumsResponse(nameAndIdAlbumResponseList), HttpStatus.OK);
     }
 
-    public ImageToAlbumResponse getImageToAlbum(int albumId) {
-        Album album = albumRepository.albumId(albumId).stream().findFirst().orElse(null);
+    public ResponseEntity<ImageToAlbumResponse> getImageToAlbum(int albumId) {
+        Album album = albumRepository.findByAlbumId(albumId);
 
         if (album == null) {
-            return (ImageToAlbumResponse) ResponseEntity.status(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        return new ImageToAlbumResponse(album.getImageList());
+        return new ResponseEntity<>(new ImageToAlbumResponse(albumId, album.getAlbumName(), album.getImageList()), HttpStatus.OK);
     }
 
-
-    private String relativePath(String name) {
-        return "src/main/resources/albums/" + name;
-    }
 
     private void deleteDirectory(File path) {
         if (path.isDirectory()) {
 
-            for (File f : Objects.requireNonNull(path.listFiles())) {
+            for (File f : (path.listFiles())) {
                 if (f.isDirectory()) {
                     deleteDirectory(f);
                 } else f.delete();
@@ -115,5 +111,9 @@ public class AlbumService {
         path.delete();
     }
 
+
+    public String getUploadPath() {
+        return uploadPath;
+    }
 
 }

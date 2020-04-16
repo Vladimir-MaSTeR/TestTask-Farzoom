@@ -10,9 +10,12 @@ import java.util.List;
 @Repository
 public interface AlbumRepository extends JpaRepository<Album, Integer> {
 
-    @Query(value = "SELECT * FROM albums a WHERE a.album_name = ?1", nativeQuery = true)
-    List<Album> searchAlbumName(String name);
+    //    @Query(value = "SELECT * FROM album a WHERE a.album_name = ?1", nativeQuery = true)
+//    List<Album> searchAlbumName(String name);
+    Album findByAlbumName(String name);
+//   пример   User findByEmailAddress(String emailAddress);
 
-    @Query(value = "SELECT * FROM albums a WHERE a.album_id = ?1", nativeQuery = true)
-    List<Album> albumId(int id);
+    //    @Query(value = "SELECT * FROM albums a WHERE a.album_id = ?1", nativeQuery = true)
+//    List<Album> albumId(long id);
+    Album findByAlbumId(int id);
 }

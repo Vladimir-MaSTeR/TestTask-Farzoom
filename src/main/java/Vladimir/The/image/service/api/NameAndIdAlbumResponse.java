@@ -1,15 +1,15 @@
 package Vladimir.The.image.service.api;
 
-public class AllAlbums implements CommonResponse {
+public class NameAndIdAlbumResponse {
 
     private int id;
     private String name;
 
 
-    public AllAlbums() {
+    public NameAndIdAlbumResponse() {
     }
 
-    public AllAlbums(int id, String name) {
+    public NameAndIdAlbumResponse(int id, String name) {
         this.id = id;
         this.name = name;
     }
